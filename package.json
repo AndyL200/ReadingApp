@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "better-sqlite3": "^12.5.0",
+    "express": "^5.2.1",
+    "pdfjs-dist": "^5.4.449",
+    "pdfreader": "^3.0.8"
+  }
+}
