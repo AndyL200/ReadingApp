@@ -12,7 +12,7 @@ console.log("\n\t\t", __dirname)
 const config = mergeConfig(getDefaultConfig(__dirname), {
     resolver: {
         alias: {
-            '@': './',
+            '@/': './',
         }
     }
 });

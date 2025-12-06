@@ -11,32 +11,53 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import Layout from "./screens/layout.tsx"
+import Layout from "./components/layout.tsx"
+import PreScreen from 'screens/pre_screen.tsx';
 import "./global.css"
+import { useContext, useEffect, useState } from 'react';
+import HomeScreen from 'screens/home.tsx';
 
 
 
 
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const authContext = useContext()
+  useEffect(()=>{
+    if(authContext ...) {
+      setIsAuthenticated(true);
+    }
+    else {
+      setIsAuthenticated(false);
+    }
+  }, [authContext])
   const isDarkMode = useColorScheme() === 'dark';
 
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <AppContent isAuthenticated={isAuthenticated}/>
+      <Layout/>
     </SafeAreaProvider>
   );
 }
 
-function AppContent() {
+function AppContent({isAuthenticated} : {isAuthenticated : boolean}) {
   const safeAreaInsets = useSafeAreaInsets();
-
+  if(isAuthenticated)
+  {
   return (
     <View style={styles.container}>
-      <Layout/>
+      <HomeScreen/>
     </View>
   );
+  }
+  else {
+    <View style={styles.container}>
+      <PreScreen/>
+    </View>
+  }
 }
 
 const styles = StyleSheet.create({
