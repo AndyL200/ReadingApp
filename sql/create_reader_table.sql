@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS DOCUMENTS (
+    doc_id SERIAL PRIMARY KEY,
+    title TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS READERS (
+    doc_id INT REFERENCES DOCUMENTS(doc_id),
+    page_num INT,
+    content JSONB,
+    PRIMARY KEY (doc_id, page_num)
+);
+
+SELECT * FROM readers
