@@ -1,10 +1,10 @@
-const pool = require('./postgres')
-const fs = require('fs')
-const path = require('path')
+import pool from './postgres.js'
+import fs from 'fs'
+import path from 'path'
 
 
 function loadSQL(filename) {
-    return fs.readFileSync(path.join(__dirname, 'sql', filename), 'utf-8')
+    return fs.readFileSync(path.join('./sql', filename), 'utf8')
 }
 
 async function executeSQL(filename) { 
@@ -13,9 +13,26 @@ async function executeSQL(filename) {
 }
 
 
+async function insertDocument(title, page_count) {
+    const query = loadSQL("insertDocument.sql")
+    //return docId
+    const result = await pool.query(query, [title, page_count])
+    return result.rows[0].doc_id
+}
+
 async function insertPageContent(docId, pageNum, content) {
     const query = loadSQL("insertContent.sql")
-    return await pool.query(query, [docId, pageNum, JSON.stringify(content)])
+    if (!docId || !pageNum || !content) {
+        return;
+    }
+    try {
+        await pool.query(query, [docId, pageNum, JSON.stringify(content)])
+    }
+    catch (err) {
+        console.error(`Failed to insert page content. docId=${docId}, pageNum=${pageNum}: `, err)
+    }
+
+    return; 
 }
 
 async function insertContentForPages(docId, pages) {
@@ -23,14 +40,22 @@ async function insertContentForPages(docId, pages) {
     try {
         await client.query('BEGIN');
 
+        const query = loadSQL("insertContent.sql")
+
         for (const page of pages) {
-            const query = loadSQL("insertContent.sql")
-            await client.query(query, [docId, page.pageNumber, JSON.stringify(page)])
+            
+            if (!page || !page.pageNumber || !page.text) {
+                console.warn(`Skipping invalid page for docId=${docId}:`, page);
+                continue;
+            }
+            //handle images later
+            await client.query(query, [docId, page.pageNumber, JSON.stringify(page.text)])
         }
 
         await client.query('COMMIT')
     } catch(err) {
         await client.query('ROLLBACK')
+        console.error(`Transaction failed`, err)
     } finally {
         client.release();
     }
@@ -55,11 +80,12 @@ async function selectRandomDoc() {
     
 }
 
-module.exports = {
+export {
     loadSQL,
     executeSQL,
     insertPageContent,
     insertContentForPages,
     selectRange,
-    selectRandomDoc
+    selectRandomDoc,
+    insertDocument
 }

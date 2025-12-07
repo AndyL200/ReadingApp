@@ -1,5 +1,6 @@
-const pg = require('pg')
-const dotenv = require('dotenv')
+import * as pg from 'pg'
+import * as dotenv from 'dotenv'
+
 dotenv.config();
 
 const pool = new pg.Pool({
@@ -15,4 +16,4 @@ const pool = new pg.Pool({
     maxLifetimeSeconds: 60
 })
 
-module.exports = pool
+export default pool

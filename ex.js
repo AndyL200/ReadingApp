@@ -1,11 +1,11 @@
-const express = require('express')
+import express from 'express'
 const app = express()
-const {
+import {
     executeSQL,
     insertPageContent,
     insertContentForPages,
     selectRange,
-    selectRandomDoc} = require("./queries");
+    selectRandomDoc} from "./queries";
 
 async function init() {
     try {
