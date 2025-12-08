@@ -5,7 +5,8 @@ import {
     insertPageContent,
     insertContentForPages,
     selectRange,
-    selectRandomDoc} from "./queries";
+    selectRandomDoc,
+    selectRandomRead} from "./queries";
 
 async function init() {
     try {
@@ -26,12 +27,13 @@ app.listen(5000, ()=> {
 //postgresql query returns data components
 //should be using a json token
 app.get('/', async (req, res)=>{
+    const doc_id = await selectRandomDoc()
     const data = await selectRange(doc_id, [1, 10])
     res.send(data)
 })
 
 app.get('/random', async (req,res)=> {
-    const data = await selectRandomDoc()
+    const data = await selectRandomRead()
     res.send(data)
 })
 

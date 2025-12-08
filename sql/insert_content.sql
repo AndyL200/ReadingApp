@@ -1,0 +1,1 @@
+INSERT INTO READERS (doc_id, page_num, content) VALUES ($1, $2, $3) ON CONFLICT (doc_id, page_num) DO UPDATE SET content = $3::json

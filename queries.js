@@ -26,6 +26,7 @@ async function insertPageContent(docId, pageNum, content) {
         return;
     }
     try {
+        //is this the best method?
         await pool.query(query, [docId, pageNum, JSON.stringify(content)])
     }
     catch (err) {
@@ -33,6 +34,10 @@ async function insertPageContent(docId, pageNum, content) {
     }
 
     return; 
+}
+
+async function createUser() {
+
 }
 
 async function insertContentForPages(docId, pages) {
@@ -63,12 +68,49 @@ async function insertContentForPages(docId, pages) {
 
 async function selectRange(docId, start, end) {
     const query = loadSQL("contentRange.sql")
+    //grab doc_id, page_nums, content from range of pages
     const result = await pool.query(query, [docId, start, end]);
+    //attach current page value for user to the result
     return result.rows;
 }
 
-//Grab a random document for testing
+async function user_selectRange(docId, start, end, userId) {
+
+}
+
+async function getCurrPage(docId, userId) {
+    const query = loadSQL("getCurrPage.sql")
+    try {
+        const result = await pool.query(query, [docId, userId]);
+        if(!result.rows[0]) {
+            throw new Error("New user-document pair");
+        }
+        return result.rows[0].curr_page;
+    }
+    catch (err) {
+        if (err.message === "New user-document pair") {
+            let subquery = loadSQL("insertUserDocPair.sql");
+            await pool.query(subquery, [userId, docId, 1]); //default curr_page to 1
+            return null; // Indicate that this is a new pair
+        }
+        else {
+        console.error("Error getting current page: ", err);
+        }
+    }
+}
+
 async function selectRandomDoc() {
+    const query = `SELECT doc_id FROM DOCUMENTS ORDER BY RANDOM() LIMIT 1`
+    try {
+        const result = await pool.query(query);
+        return result.rows[0].doc_id;
+    }
+    catch (err) {
+        console.error("Error selecting random document: ", err);
+    }
+}
+//Grab a random document for testing
+async function selectRandomRead() {
     const query = 'SELECT * FROM READERS ORDER BY RANDOM() LIMIT 1';
     try {
     const result = await pool.query(query);
@@ -86,6 +128,10 @@ export {
     insertPageContent,
     insertContentForPages,
     selectRange,
+    selectRandomRead,
     selectRandomDoc,
     insertDocument
 }
+
+const doc = await selectRandomDoc()
+console.log("Random Document:", doc)
