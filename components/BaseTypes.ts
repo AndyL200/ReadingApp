@@ -11,7 +11,8 @@ export abstract class MediaTypes {
 }
 export type Itemizer = {
     //content id
-    cid : string,
-    mediatype? : string,
-    size?: Double
+    cid : number | string,
+    content : string,
+    pages: number //Integer
+    currentPage?: number //Integer
 }

@@ -18,7 +18,11 @@ import { useContext, useEffect, useState } from 'react';
 import HomeScreen from 'screens/home.tsx';
 
 
-
+const styles = StyleSheet.create({
+  font: {
+    fontFamily: "System",
+  },
+});
 
 
 function App() {
@@ -37,7 +41,7 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent isAuthenticated={isAuthenticated}/>
+      <AppContent style={styles.font} isAuthenticated={isAuthenticated}/>
       <Layout/>
     </SafeAreaProvider>
   );
@@ -48,22 +52,20 @@ function AppContent({isAuthenticated} : {isAuthenticated : boolean}) {
   if(isAuthenticated)
   {
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       <HomeScreen/>
     </View>
   );
   }
   else {
-    <View style={styles.container}>
+    return (
+    <View className="flex-1">
       <PreScreen/>
     </View>
+    )
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+
 
 export default App;

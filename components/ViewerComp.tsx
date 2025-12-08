@@ -1,13 +1,32 @@
 import React from "react";
-import { View } from "react-native";
-import { Itemizer, Personalizer, MediaTypes } from "./BaseTypes";
+import { View, Text, Image, Button, TouchableOpacity, ScrollView } from "react-native";
+import {Ionicons} from "@react-native-vector-icons/ionicons";
+import { Itemizer} from "./BaseTypes";
 
 
-//pass item.mediatype
+
+//serves as the main layout for a short form content viewer
 export default function ViewerComponent(item : Itemizer) {
     return (
     <View>
-
+        <View className="flex flex-row justify-center">
+            {/*image source is uploader*/}
+            <Image className="basis-1/4" source=""/>
+            <Text className="basis-1/4">Views: {}</Text>
+            <TouchableOpacity
+            className="basis-1/4"
+            onPress={}
+            accessibilityLabel="">Comments</TouchableOpacity>
+            {/*eventual is_favorited flag (heart-sharp and heart-outline)*/}
+            <Ionicons className="basis-1/4" name="heart-sharp" size={24} color="red"/>
+        </View>
+        {/* add wraparound and structure the text*/}
+        <ScrollView>
+        <Text className="">{item.content}</Text>
+        </ScrollView>
+        {item.currentPage &&  (
+            <Text className=" ">{item.currentPage}/{item.pages}</Text>
+        )}
     </View>
     )
 }
