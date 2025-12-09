@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {AuthProvider} from "../components/contexts/AuthContext.tsx"
 import HomeScreen from "../screens/home.tsx"
 import Profile from '../screens/profile.tsx';
 
@@ -19,12 +20,14 @@ function TabLayout() {
 const Stack = createNativeStackNavigator();
 function RootStack() {
   return (
+    <AuthProvider>
     //Navigation to screens outside of bottom tabs should be possible as well
     <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="Tabs" component={TabLayout}/>
       <Stack.Screen name="Home" component={HomeScreen}/>
       <Stack.Screen name="Profile" component={Profile}/>
     </Stack.Navigator>
+    </AuthProvider>
   );
 }
 

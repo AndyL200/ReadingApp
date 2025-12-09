@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  {/*
   const authContext = useContext()
   useEffect(()=>{
     if(authContext ...) {
@@ -36,8 +37,10 @@ function App() {
       setIsAuthenticated(false);
     }
   }, [authContext])
-  const isDarkMode = useColorScheme() === 'dark';
+  
+  */}
 
+  const isDarkMode = useColorScheme() === 'dark';
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
@@ -47,19 +50,19 @@ function App() {
   );
 }
 
-function AppContent({isAuthenticated} : {isAuthenticated : boolean}) {
+function AppContent({style, isAuthenticated} : {style: any, isAuthenticated : boolean}) {
   const safeAreaInsets = useSafeAreaInsets();
   if(isAuthenticated)
   {
   return (
-    <View className="flex-1">
+    <View style={style} className="flex-1">
       <HomeScreen/>
     </View>
   );
   }
   else {
     return (
-    <View className="flex-1">
+    <View style={style} className="flex-1">
       <PreScreen/>
     </View>
     )
