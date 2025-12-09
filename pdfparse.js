@@ -26,7 +26,8 @@ async function extractPageContent(docProxy, pn){
     const content = await page.getTextContent();
     const text = content.items.map((item, index)=> ({
         text : item.str,
-        cid_base: index
+        //maybe pick a better name, this value serves as a sequence number for text on a page
+        cid_seq: index
     }));
 
     const operatorList = await page.getOperatorList();
