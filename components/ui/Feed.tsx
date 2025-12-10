@@ -3,15 +3,13 @@ import ViewerComponent from "components/ViewerComp";
 import { Itemizer } from "components/BaseTypes";
 import { useEffect, useMemo, useState } from "react";
 import useDeque from "components/hooks/useDeque";
+import {api} from "scripts/api"
 
 
 //Format: cid => doc_id stands for content identifier
 //text => text content of document page
 let a: Itemizer = { doc_id : 1 , content: "{}", page_count: 5 };
 const DATA : Itemizer[] = [a]
-
-
-const api_alias = "localhost:5000"
 
 
 
@@ -22,11 +20,11 @@ export default function Feed() {
 
     useEffect(()=>{
         function grabFirst() {
-        fetch(api_alias + '/').then(response => {
-            if (response && response.ok) {
-                return response.json();
+        api.get('/', {responseType: "json"}).then(response => {
+            if (response && response.status === 200) {
+                return response.data;
             }
-            throw new Error("Response not ok")
+            throw new Error("Response not OK 200")
         }).then(json => {
             if(json && "doc_id" in json && "content" in json && "page_count" in json && "current_page" in json) {
                     if((typeof json.doc_id === "number") && typeof json.content === "string" && typeof json.page_count === "number" && typeof json.current_page === "number") {
@@ -39,9 +37,9 @@ export default function Feed() {
     grabFirst()
         async function grabMore() {
             for(let i = 0; i < 4; ++i) {
-            fetch(api_alias + '/').then(response => {
-            if (response && response.ok) {
-                return response.json();
+            api.get('/', {responseType: "json"}).then(response => {
+            if (response && response.status === 200) {
+                return response.data;
             }
             throw new Error("Response not ok")
         }).then(json => {
@@ -54,9 +52,9 @@ export default function Feed() {
             })
             }
         for(let i = 0; i < 5; ++i) {
-            fetch(api_alias + '/').then(response => {
-            if (response && response.ok) {
-                return response.json();
+            api.get('/', {responseType: "json"}).then(response => {
+            if (response && response.status === 200) {
+                return response.data;
             }
             throw new Error("Response not ok")
         }).then(json => {

@@ -6,6 +6,6 @@
       "@/": ["./"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "components/contexts/AuthContext.jsx"],
   "exclude": ["**/node_modules", "**/Pods"]
 }

@@ -1,21 +1,17 @@
-import { Button } from "@react-navigation/elements";
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native"
 import { useAuth } from "components/hooks/useAuth";
+import { useState } from "react";
+import { View, Text, TouchableOpacity, TextInput } from "react-native"
 
 
-export default function LoginScreen() {
-    const [email, setEmail] = useState("")
+export default function SignUpScreen() {
     const navigate = useNavigation<NavigationProp<any>>();
+    const [email, setEmail] = useState("")
     const [error, setError] = useState<string | null>(null)
     const {validEmail, validUsername} = useAuth()
-    function signUpRedirect() {
-        navigate.navigate("SignUp")
-    }
     function passwordRedirect() {
         //pass email
-            if(validEmail(email)) {
+        if(validEmail(email)) {
                 navigate.navigate("Password", {email: email})
             }
             else if (validUsername(email).valid) {
@@ -23,10 +19,10 @@ export default function LoginScreen() {
             }
             else {
             setError("Please enter a valid email or username")
-            }
+        }
     }
     return (
-        <View>
+    <View>
             <Text>ReadingApp</Text>
             <Text>Login Screen</Text>
 
@@ -36,15 +32,11 @@ export default function LoginScreen() {
                 <TextInput className="" placeholder="Email" onChangeText={setEmail} value={email}></TextInput>
                 <TouchableOpacity onPress={passwordRedirect}>Continue</TouchableOpacity>
                 <Text>----------------OR----------------</Text>
-
-                <Text>Don't have an account?</Text>
-                <TouchableOpacity onPress={signUpRedirect}>Sign Up</TouchableOpacity>
                 <TouchableOpacity onPress={()=>{}}>Continue with Google</TouchableOpacity>
                 <TouchableOpacity onPress={()=>{}}>Continue with Apple</TouchableOpacity>
             </View>
-
-            {error && <Text className="text-red-500">{error}</Text>}
-
-        </View>
+        
+        {error && <Text className="text-red-500">{error}</Text>}
+    </View>
     )
 }
