@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
 
 
 //express middleware
@@ -8,6 +10,7 @@ export const authenticateToken = async (req, res, next) => {
         res.sendStatus(401)
         return;
     }
+    //make sure token that the user has isn't hashed
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         //what if signing in for the first time?
         if (err) {
@@ -24,9 +27,9 @@ export const authenticateToken = async (req, res, next) => {
 
 
 export const generateRefreshToken = (user = null) => {
-    return jwt.sign({user_id: user?.id}, process.env.REFRESH_SECRET, {algorithm: "RS512", expiresIn: '7d'})
+    return jwt.sign({user_id: user?.id}, process.env.REFRESH_SECRET, {expiresIn: '7d'})
 }
 
 export const generateAccessToken = (user) => {
-    return jwt.sign({user_id: user.id}, process.env.ACCESS_TOKEN_SECRET, {algorithm: "RS512", expiresIn: '15m'})
+    return jwt.sign({user_id: user.id}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'})
 }

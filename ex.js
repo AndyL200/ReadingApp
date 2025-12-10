@@ -7,8 +7,11 @@ import {
     selectRange,
     selectRandomDoc,
     selectRandomRead,
-    registerUser} from "./queries.js";
-import { authenticateToken, generateAccessToken, generateRefreshToken } from './auth_helper.js';
+    registerUser,
+    loginUser,
+    checkForToken
+} from "./queries.js";
+import { authenticateToken, generateAccessToken } from './auth_helper.js';
 
 async function init() {
     try {
@@ -61,17 +64,40 @@ app.listen(5000, ()=> {
     console.log("server is listening on port 5000 ...")
 })
 
-app.get('/api/refresh_token', async (req, res) => {
+app.post('/api/login', async (req, res) => {
+    //verify user credentials
+    const success = await loginUser(req.body.email, req.body.password, req.body.username)
+
+    if (success) {
+        //check for refresh token
+        //if expired refresh
+        res.json({user_id: success.user_id, accessToken: generateAccessToken({id: success.user_id}), LOGIN_SUCCESS: success.LOGIN_SUCCESS, ERROR: success.ERROR})
+    }
+})
+
+
+app.get('/api/me', async (req, res) => {
+    //asking for an access token
+    res.redirect(302, '/api/refresh_token')
+})
+app.get('/api/refresh_token', authenticateToken, async (req, res) => {
     //issue new access token
-    
+    const has_token = await checkForToken(req.body.user_id)
+
+    if(has_token) {
+        const access = generateAccessToken({id: req.body.userId})
+        res.json({user_id: req.body.user_id, accessToken: access})
+    }
 
 })
-app.get('/api/signup', async (req, res) => {
+app.post('/api/signup', async (req, res) => {
     //insert into users
     //only refresh token is stored
-    await registerUser(req.body.email, req.body.password, req.body.username).then(({userId, access}) => {
-        res.json({userId, accessToken: access})
-    })
+    const response = await registerUser(req.body.email, req.body.password, req.body.username)
+
+    res.json({user_id: response.user_id, accessToken: response.accessToken, SIGNUP_SUCCESS: response.SIGNUP_SUCCESS, ERROR: response.ERROR})
+
+    //Remember to trigger auth context when this is handled
 
 })
 //postgresql query returns data components
@@ -92,12 +118,12 @@ app.get('/', authenticateToken, async (req, res)=>{
         page_count: 10,
         current_page: 1 
     }
-    res.send(response)
+    res.json(response)
 })
 
-app.get('/random', authenticateToken, async (req,res)=> {
+app.get('/api/random', authenticateToken, async (req,res)=> {
     const data = await selectRandomRead()
-    res.send(data)
+    res.json(data)
 })
 
 //TODO(check for JSON web token and then query for )

@@ -1,0 +1,1 @@
+SELECT user_id, email, username FROM USERS WHERE username = $1 AND password_hash = crypt($2, password_hash);

@@ -37,11 +37,62 @@ async function insertPageContent(docId, pageNum, content) {
     return; 
 }
 
+async function checkForToken(user_id) {
+    //only refresh the hash if the user is found in JWT_KEYS with an expired token
+    const query = loadSQL("check_for_token.sql")
+    const result = await pool.query(query, [user_id])
+
+    const token_data = result.rows[0];
+    if(!token_data.token_hash) {
+        console.error("This user has no token")
+        return false;
+    }
+    //refresh if token is expired
+    if(token_data.expires_at < new Date().getTime()) {
+        const update_query = loadSQL("refresh_token.sql")
+        await pool.query(update_query, [user_id, generateRefreshToken({id: user_id}), new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)])
+    }
+
+    return true;
+}
+
+async function loginUser(email, password, username = null) {
+    if (username) {
+        //Login with username
+        try {
+        const query = loadSQL("grab_user_by_uname.sql")
+        const result = await pool.query(query, [username, password])
+        return {user_id: result.rows[0].user_id, LOGIN_SUCCESS: true, ERROR: null}
+        }
+        catch (err) {
+            return {user_id: null, LOGIN_SUCCESS: false, ERROR: err.message}
+        }
+    }
+    else if (email) {
+        //Login with email
+        try {
+            const query = loadSQL("grab_user_by_email.sql")
+            const result = await pool.query(query, [email, password])
+            return {user_id: result.rows[0].user_id, LOGIN_SUCCESS: true, ERROR: null}
+        }
+        catch (err) {
+            return {user_id: null, LOGIN_SUCCESS: false, ERROR: err.message}
+        }
+        
+    }
+
+    return {user_id: null, LOGIN_SUCCESS: false, ERROR: null}
+}
+async function getToken(token_hash) {
+    const query = loadSQL("get_token.sql")
+    const result = await pool.query(query, [token_hash])
+    return result.rows[0].token_hash
+}
 async function registerUser(email, password, username = null) {
     const client = await pool.connect()
     try {
         await client.query('BEGIN');
-
+        //check if user exists
         const query_user = loadSQL("insert_user.sql")
         const result_user = await client.query(query_user, [email, username, password])
 
@@ -57,11 +108,12 @@ async function registerUser(email, password, username = null) {
 
         await client.query('COMMIT');
         //don't return refresh, managed by database only
-        return {userId, access};
+        return {userId, access, SIGNUP_SUCCESS: true, ERROR: null};
     }
     catch (err) {
         await client.query('ROLLBACK');
         console.error("Transaction failed: ", err)
+        return {userId: null, access: null, SIGNUP_SUCCESS: false, ERROR: err.message};
     }
     finally {
         client.release();
@@ -161,7 +213,9 @@ export {
     selectRandomRead,
     selectRandomDoc,
     insertDocument,
-    registerUser
+    registerUser,
+    loginUser,
+    checkForToken
 }
 
 const doc = await selectRandomDoc()

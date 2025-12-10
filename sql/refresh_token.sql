@@ -1,0 +1,1 @@
+UPDATE (token_hash, expires_at) FROM JWT_KEYS SET token_hash = crypt($2, gen_salt('bf', 10)), expires_at = $3 WHERE user_id = $1;

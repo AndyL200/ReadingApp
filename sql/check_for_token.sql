@@ -1,0 +1,1 @@
+SELECT (token_hash, expires_at) FROM JWT_KEYS WHERE user_id = $1
