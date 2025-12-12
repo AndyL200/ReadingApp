@@ -2,7 +2,7 @@ import { Button } from "@react-navigation/elements";
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { useAuth } from "components/hooks/useAuth";
+import { useAuth } from "@/components/hooks/useAuth";
 
 
 export default function LoginScreen() {

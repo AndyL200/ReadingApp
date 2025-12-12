@@ -12,11 +12,11 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import Layout from "./components/layout.tsx"
-import PreScreen from 'screens/pre_screen.tsx';
+import PreScreen from './screens/pre_screen.tsx';
 import "./global.css"
 import { useContext, useEffect, useState } from 'react';
-import HomeScreen from 'screens/home.tsx';
-import { useAuth } from 'components/hooks/useAuth.jsx';
+import HomeScreen from './screens/home.tsx';
+import { useAuth } from  './components/hooks/useAuth.jsx';
 import Animated, { CSSAnimationKeyframes } from 'react-native-reanimated';
 
 

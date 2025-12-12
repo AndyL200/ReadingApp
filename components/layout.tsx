@@ -1,13 +1,13 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {AuthProvider} from "../components/contexts/AuthContext.tsx"
-import HomeScreen from "../screens/home.tsx"
-import Profile from '../screens/profile.tsx';
-import Camera from 'screens/camera.tsx';
-import { PasswordScreen } from 'screens/password.tsx';
-import SignUpScreen from 'screens/sign_up.tsx';
-import LoginScreen from 'screens/login.tsx';
+import {AuthProvider} from "@/components/contexts/AuthContext"
+import HomeScreen from "@/screens/home"
+import Profile from '@/screens/profile';
+import Camera from '@/screens/camera.tsx';
+import { PasswordScreen } from '@/screens/password.tsx';
+import SignUpScreen from '@/screens/sign_up.tsx';
+import LoginScreen from '@/screens/login.tsx';
 
 const Tabs = createBottomTabNavigator()
 

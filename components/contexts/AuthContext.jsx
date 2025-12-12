@@ -1,5 +1,5 @@
 import {createContext, useContext, useEffect, useLayoutEffect} from "react";
-import api from "scripts/api.js";
+import api from "@/scripts/api.js";
 
 
 const AuthContext = createContext(undefined);

@@ -1,9 +1,9 @@
 import { View, Text, FlatList } from "react-native";
-import ViewerComponent from "components/ViewerComp";
-import { Itemizer } from "components/BaseTypes";
+import ViewerComponent from "@/components/ViewerComp";
+import { Itemizer } from "@/components/BaseTypes";
 import { useEffect, useMemo, useState } from "react";
-import useDeque from "components/hooks/useDeque";
-import {api} from "scripts/api"
+import useDeque from "@/components/hooks/useDeque";
+import {api} from "@/scripts/api"
 
 
 //Format: cid => doc_id stands for content identifier

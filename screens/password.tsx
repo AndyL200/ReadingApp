@@ -1,5 +1,5 @@
 import {View, Text, TextInput, TouchableOpacity} from "react-native";
-import {useAuth} from "components/hooks/useAuth"
+import {useAuth} from "@/components/hooks/useAuth"
 import { useEffect, useState } from "react";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 
