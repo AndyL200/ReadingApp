@@ -1,5 +1,5 @@
 import {View, Text, TextInput, TouchableOpacity} from "react-native";
-import {useAuth} from "@/components/hooks/useAuth"
+import {useAuth} from "../components/hooks/useAuth"
 import { useEffect, useState } from "react";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 
@@ -11,7 +11,7 @@ export function PasswordScreen({route} : any) {
     const [password, setPassword] = useState("")
     const [success_state, setSuccessState] = useState<boolean>()
     const [error, setError] = useState<string | null>(null)
-    const {Register, Login, token} = useAuth()
+    const {validPass, Register, Login, token} = useAuth()
     const navigate = useNavigation<NavigationProp<any>>();
 
     //check for the existence of a token
@@ -25,31 +25,61 @@ export function PasswordScreen({route} : any) {
 
 
     async function HandleLogin() {
-        if(isExisting) {
-            const success = await Login(password, username, email)
-            setSuccessState(success.LOGIN_SUCCESS)
-            setError(success.ERROR)
+        const val = validPass(password)
+        if (val.valid) {
+            if(isExisting) {
+                const success = await Login(password, username, email)
+                setSuccessState(success.LOGIN_SUCCESS)
+                setError(success.ERROR)
+            }
+            else {
+                const success = await Register(email, password, username)
+                setSuccessState(success.SIGNUP_SUCCESS)
+                setError(success.ERROR)
+            }
         }
         else {
-            const success = await Register(email, password, username)
-            setSuccessState(success.SIGNUP_SUCCESS)
-            setError(success.ERROR)
+            setError(val.error)
         }
+
     }
     return (
-        <View>
-            <Text>ReadingApp</Text>
-            <View className="flex flex-col items-center justify-center">
-                {!email  && (
-                    <TextInput className="" placeholder="Email" onChangeText={setEmail} value={email}></TextInput>
-                )}
-                <TextInput className="" placeholder="Password" onChangeText={setPassword} value={password}></TextInput>
-                <TouchableOpacity onPress={HandleLogin}>Continue</TouchableOpacity>
-
-                {error && (
-                    <Text className="text-red-500">{error}</Text>
+        <View className="flex-1 items-center justify-center bg-white px-4">
+            <Text className="text-2xl font-bold mb-8">ReadingApp</Text>
+            
+            <View className="w-full max-w-md">
+                <Text className="text-lg mb-4 text-center">{isExisting ? 'Log In' : 'Create Account'}</Text>
+                <Text className="text-sm mb-2 text-center">Enter your password</Text>
+                
+                {!email && (
+                    <TextInput 
+                        className="border border-gray-300 rounded px-4 py-2 mb-4" 
+                        placeholder="Email" 
+                        onChangeText={setEmail} 
+                        value={email}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                    />
                 )}
                 
+                <TextInput 
+                    className="border border-gray-300 rounded px-4 py-2 mb-4" 
+                    placeholder="Password" 
+                    onChangeText={setPassword} 
+                    value={password}
+                    secureTextEntry
+                />
+                
+                <TouchableOpacity 
+                    className="bg-blue-500 rounded px-4 py-3"
+                    onPress={HandleLogin}
+                >
+                    <Text className="text-white text-center font-semibold">Continue</Text>
+                </TouchableOpacity>
+
+                {error && (
+                    <Text className="text-red-500 text-center mt-4">{error}</Text>
+                )}
             </View>
         </View>
     )

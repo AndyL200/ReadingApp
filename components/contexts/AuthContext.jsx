@@ -1,8 +1,8 @@
-import {createContext, useContext, useEffect, useLayoutEffect} from "react";
-import api from "@/scripts/api.js";
+import {createContext, useState, useEffect, useLayoutEffect} from "react";
+import {api} from "../../scripts/api.js";
 
 
-const AuthContext = createContext(undefined);
+export const AuthContext = createContext(undefined);
 
 
 export const AuthProvider = ({children}) => {
@@ -106,10 +106,10 @@ export const AuthProvider = ({children}) => {
             console.error("Email and password are required for registration")
             return {SIGNUP_SUCCESS: false, ERROR: "Email and password are required"};
         }
-        else if (!(email.endsWith("@") && email.endsWith("."))) {
-            console.error("Invalid email")
-            return {SIGNUP_SUCCESS: false, ERROR: "Invalid email"};
-        }
+        // else if (!(email.endsWith("@") && email.endsWith("."))) {
+        //     console.error("Invalid email")
+        //     return {SIGNUP_SUCCESS: false, ERROR: "Invalid email"};
+        // }
         const passwordCheck = validPass(password);
         if(!passwordCheck.valid) {
             return {LOGIN_SUCCESS: false, ERROR: passwordCheck.error}
@@ -132,6 +132,7 @@ export const AuthProvider = ({children}) => {
                 username: username
             })
             if(response.data?.accessToken) {
+                console.log("SETTING TOKEN", response.data.accessToken)
                 setToken(response.data.accessToken)
             }
             //If email or username exists, the signup success will be false
@@ -156,7 +157,7 @@ export const AuthProvider = ({children}) => {
 
 
     return (
-        <AuthContext.Provider value={{token, Login, Register, Logout, validEmail, validUsername}}>
+        <AuthContext.Provider value={{token, Login, Register, Logout, validEmail, validUsername, validPass}}>
             {children}
         </AuthContext.Provider>
     )

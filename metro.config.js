@@ -15,7 +15,7 @@ console.log("\n\t\t", projectRoot)
 const config = mergeConfig(getDefaultConfig(projectRoot), {
     resolver: {
     alias: {
-      '@': './',
+      '@': projectRoot,
     },
   },
 });
