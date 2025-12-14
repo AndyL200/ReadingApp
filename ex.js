@@ -24,6 +24,8 @@ async function init() {
 
 init();
 
+app.use(express.json())
+
 
 //tend to keep functions returning one data type for type safety
 //process database query results
