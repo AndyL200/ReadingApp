@@ -21,7 +21,7 @@ export default function Feed() {
                 if (response && response.status === 200) {
                     const json = response.data;
                     if(json && "doc_id" in json && "content" in json && "page_count" in json && "current_page" in json) {
-                        if((typeof json.doc_id === "number") && typeof json.content === "string" && typeof json.page_count === "number" && typeof json.current_page === "number") {
+                        if((typeof json.doc_id === "number") && typeof json.page_count === "number" && typeof json.current_page === "number") {
                             let item : Itemizer = {doc_id : json.doc_id, content: json.content, page_count: json.page_count, current_page: json.current_page}
                             deque.pushBack(item)
                         }
@@ -44,7 +44,7 @@ export default function Feed() {
                     if (response && response.status === 200) {
                         const json = response.data;
                         if(json && "doc_id" in json && "content" in json && "page_count" in json && "current_page" in json) {
-                            if((typeof json.doc_id === "number") && typeof json.content === "string" && typeof json.page_count === "number" && typeof json.current_page === "number") {
+                            if((typeof json.doc_id === "number") && typeof json.page_count === "number" && typeof json.current_page === "number") {
                                 let item : Itemizer = {doc_id : json.doc_id, content: json.content, page_count: json.page_count, current_page: json.current_page}
                                 deque.pushBack(item)
                             }
@@ -57,7 +57,7 @@ export default function Feed() {
                     if (response && response.status === 200) {
                         const json = response.data;
                         if(json && "doc_id" in json && "content" in json && "page_count" in json && "current_page" in json) {
-                            if((typeof json.doc_id === "number") && typeof json.content === "string" && typeof json.page_count === "number" && typeof json.current_page === "number") {
+                            if((typeof json.doc_id === "number") && typeof json.page_count === "number" && typeof json.current_page === "number") {
                                 let item : Itemizer = {doc_id : json.doc_id, content: json.content, page_count: json.page_count, current_page: json.current_page}
                                 deque.pushFront(item)
                             }

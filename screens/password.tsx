@@ -13,9 +13,10 @@ export function PasswordScreen({route} : any) {
     const [error, setError] = useState<string | null>(null)
     const {validPass, Register, Login, token} = useAuth()
     const navigate = useNavigation<NavigationProp<any>>();
+    console.log("PASSWORD SCREEN ENTERED: EMAIL ", email)
 
     //check for the existence of a token
-    const isExisting = !!token
+    const hasToken = !!token
 
     useEffect(() => {
         if(success_state) {
@@ -27,7 +28,7 @@ export function PasswordScreen({route} : any) {
     async function HandleLogin() {
         const val = validPass(password)
         if (val.valid) {
-            if(isExisting) {
+            if(hasToken) {
                 const success = await Login(password, username, email)
                 setSuccessState(success.LOGIN_SUCCESS)
                 setError(success.ERROR)

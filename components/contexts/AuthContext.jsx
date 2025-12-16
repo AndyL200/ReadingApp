@@ -12,7 +12,7 @@ export const AuthProvider = ({children}) => {
     useEffect(() => {
         const fetchMe = async () => {
             try {
-                const response = await api.get("/api/me")
+                const response = await api.get("/api/refresh_token")
                 setToken(response.data.accessToken)
             }
             catch {
@@ -131,9 +131,13 @@ export const AuthProvider = ({children}) => {
                 password: password,
                 username: username
             })
+            console.log("RESPONSE: ", response)
             if(response.data?.accessToken) {
                 console.log("SETTING TOKEN", response.data.accessToken)
                 setToken(response.data.accessToken)
+            }
+            else if (response.data?.ERROR == "Email already exists") {
+                return Login(password, username, email)
             }
             //If email or username exists, the signup success will be false
             return {SIGNUP_SUCCESS: response.data.SIGNUP_SUCCESS, ERROR: response.data.ERROR};
