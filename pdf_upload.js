@@ -1,5 +1,5 @@
-import {readPDF, extractPageContent, extractAllPages, extractAllPageContentStream} from './pdfparse.js'
-import {insertContentForPages, insertPageContent, insertDocument} from './queries.js'
+import {readPDF, storePages} from './pdfparse.js'
+import {uploadDocument, insertPageInfo} from './queries.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -10,25 +10,18 @@ async function uploadPDFStream(filePath) {
     }
     try {
         const docProxy = await readPDF(filePath)
-        const document = docProxy[0]
+        const document = docProxy[0];
+        const pageCount = document.numPages
+        const fileSize = docProxy[2]
         const title = path.basename(filePath, path.extname(filePath))
-        //insert title and page_count into DOCUMENTS
-        const res = await insertDocument(title || "Untitled Document", document.numPages)
-        let docId;
-        if(typeof res === "number") {
-            //insert documents returns the docId
-            docId = res
+        const renderedPages = await storePages(docProxy, 1.0)
+        const docId = await uploadDocument(title || "Untitled Document", pageCount, filePath, fileSize, 'pdf')
+        for (const page of renderedPages) {
+            insertPageInfo(docId, page.pageNumber, page.width, page.height)
         }
-        if (docId) {
-            //extract pages from the pdf
-            for await (const page of extractAllPageContentStream(docProxy)) {
-                    //all pages page content inserted into READERS
-                    insertPageContent(docId, page.pageNumber, page.text)
-                    //handle images later
-            }
-        }
-    } catch (err) {
-        console.error("PDF upload error:", err)
+    }
+    catch (err) {
+
     }
 }
 async function uploadPDFBatch() {
@@ -36,6 +29,7 @@ async function uploadPDFBatch() {
 }
 async function uploadsStream() {
     const pdfFiles = './pdfs'
+    console.log("Uploading PDFs from ", pdfFiles)
     const files = fs.readdirSync(pdfFiles)
     for (const file of files) {
         if(file.endsWith('.pdf')) {

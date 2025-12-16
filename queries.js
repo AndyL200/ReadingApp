@@ -14,28 +14,15 @@ async function executeSQL(filename) {
 }
 
 
-async function insertDocument(title, page_count) {
+
+async function uploadDocument(title, page_count, file_path, file_size, file_type) {
     const query = loadSQL("insert_document.sql")
-    //return docId
-    const result = await pool.query(query, [title, page_count])
+
+    const result = await pool.query(query, [title, file_path, file_size, file_type, page_count])
     return result.rows[0].doc_id
 }
 
-async function insertPageContent(docId, pageNum, content) {
-    const query = loadSQL("insert_content.sql")
-    if (!docId || !pageNum || !content) {
-        return;
-    }
-    try {
-        //is this the best method?
-        await pool.query(query, [docId, pageNum, JSON.stringify(content)])
-    }
-    catch (err) {
-        console.error(`Failed to insert page content. docId=${docId}, pageNum=${pageNum}: `, err)
-    }
 
-    return; 
-}
 
 async function checkForToken(user_id) {
     //only refresh the hash if the user is found in JWT_KEYS with an expired token
@@ -55,7 +42,11 @@ async function checkForToken(user_id) {
 
     return true;
 }
-
+async function hasEmail(email) {
+    const query = loadSQL("check_email.sql")
+    const result = await pool.query(query, [email])
+    return result.rows.length > 0
+}
 async function loginUser(email, password, username = null) {
     if (username) {
         //Login with username
@@ -108,12 +99,12 @@ async function registerUser(email, password, username = null) {
 
         await client.query('COMMIT');
         //don't return refresh, managed by database only
-        return {userId, access, SIGNUP_SUCCESS: true, ERROR: null};
+        return {user_id : userId, accessToken: access, SIGNUP_SUCCESS: true, ERROR: null};
     }
     catch (err) {
         await client.query('ROLLBACK');
         console.error("Transaction failed: ", err)
-        return {userId: null, access: null, SIGNUP_SUCCESS: false, ERROR: err.message};
+        return {user_id: null, accessToken: null, SIGNUP_SUCCESS: false, ERROR: err.message};
     }
     finally {
         client.release();
@@ -145,6 +136,19 @@ async function insertContentForPages(docId, pages) {
     } finally {
         client.release();
     }
+}
+
+async function selectFilePath(docId) {
+    const query = loadSQL("select_file_path.sql")
+
+    const result = await pool.query(query, [docId])
+    return result.rows[0].file_path;
+}
+async function selectPageCount(docId) {
+    const query = loadSQL(`SELECT page_count FROM DOCUMENTS WHERE doc_id = $1`)
+
+    const result = await pool.query(query, [docId])
+    return result.rows[0].page_count;
 }
 
 async function selectRange(docId, start, end) {
@@ -204,18 +208,47 @@ async function selectRandomRead() {
     
 }
 
+async function insertPageInfo(docId, pageNum, width = null, height = null) {
+    const query = loadSQL("insert_content.sql")
+    if (!docId || !pageNum) {
+        return;
+    }
+    try {
+        //is this the best method?
+        await pool.query(query, [docId, pageNum, width, height])
+    }
+    catch (err) {
+        console.error(`Failed to insert page content. docId=${docId}, pageNum=${pageNum}: `, err)
+    }
+
+    return; 
+}
+
+// --------------------------   DEPRECIATED ------------------------------ //
+
+async function insertDocument(title, page_count) {
+    const query = loadSQL("insert_document.sql")
+    //return docId
+    const result = await pool.query(query, [title, page_count])
+    return result.rows[0].doc_id
+}
+
+
+
 export {
     loadSQL,
     executeSQL,
-    insertPageContent,
-    insertContentForPages,
+    uploadDocument,
     selectRange,
     selectRandomRead,
     selectRandomDoc,
-    insertDocument,
     registerUser,
     loginUser,
-    checkForToken
+    checkForToken,
+    insertPageInfo,
+    selectFilePath,
+    selectPageCount,
+    hasEmail
 }
 
 const doc = await selectRandomDoc()

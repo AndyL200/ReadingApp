@@ -1,0 +1,1 @@
+SELECT file_path FROM DOCUMENTS WHERE doc_id = $1;

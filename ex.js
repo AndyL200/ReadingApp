@@ -2,15 +2,18 @@ import express, { text } from 'express'
 const app = express()
 import {
     executeSQL,
-    insertPageContent,
-    insertContentForPages,
+    insertPageInfo,
     selectRange,
     selectRandomDoc,
     selectRandomRead,
     registerUser,
     loginUser,
-    checkForToken
+    checkForToken,
+    selectFilePath,
+    hasEmail,
+    selectPageCount
 } from "./queries.js";
+import { extractPageContent } from './pdfparse.js';
 import { authenticateToken, generateAccessToken } from './auth_helper.js';
 
 async function init() {
@@ -73,31 +76,35 @@ app.post('/api/login', async (req, res) => {
     if (success) {
         //check for refresh token
         //if expired refresh
-        res.json({user_id: success.user_id, accessToken: generateAccessToken({id: success.user_id}), LOGIN_SUCCESS: success.LOGIN_SUCCESS, ERROR: success.ERROR})
+        return res.json({user_id: success.user_id, accessToken: generateAccessToken({id: success.user_id}), LOGIN_SUCCESS: success.LOGIN_SUCCESS, ERROR: success.ERROR})
     }
 })
 
 
 app.get('/api/me', async (req, res) => {
     //asking for an access token
-    res.redirect(302, '/api/refresh_token')
+    return res.send((req.headers.authorization?.split(' ')[1] != null)? "valid" : "invalid")
 })
 app.get('/api/refresh_token', authenticateToken, async (req, res) => {
     //issue new access token
     const has_token = await checkForToken(req.body.user_id)
 
     if(has_token) {
-        const access = generateAccessToken({id: req.body.userId})
-        res.json({user_id: req.body.user_id, accessToken: access})
+        const access = generateAccessToken({id: req.body.user_id})
+        return res.json({user_id: req.body.user_id, accessToken: access})
     }
 
 })
 app.post('/api/signup', async (req, res) => {
     //insert into users
     //only refresh token is stored
+    if (await hasEmail(req.body.email)) {
+        console.log("REDIRECTING DUE TO EXISTING EMAIL")
+        return res.json({user_id: null, accessToken: null, SIGNUP_SUCCESS: false, ERROR: "Email already exists"})
+    }
     const response = await registerUser(req.body.email, req.body.password, req.body.username)
-
-    res.json({user_id: response.user_id, accessToken: response.accessToken, SIGNUP_SUCCESS: response.SIGNUP_SUCCESS, ERROR: response.ERROR})
+    console.log("REGISTER RESPONSE: ", response)
+    return res.json({user_id: response.user_id, accessToken: response.accessToken, SIGNUP_SUCCESS: response.SIGNUP_SUCCESS, ERROR: response.ERROR})
 
     //Remember to trigger auth context when this is handled
 
@@ -107,25 +114,42 @@ app.post('/api/signup', async (req, res) => {
 //authentication middleware
 app.get('/', authenticateToken, async (req, res)=>{
     const doc_id = await selectRandomDoc()
-    const data = await selectRange(doc_id, 1, 10)
     //getCurrPage
-    
-    const sequenced = await textSequencing(data)
-    
-    const sequenced_content = sequenced.join('\n')
-    //console.log("Sequence: ", sequenced_content)
-    const response = {
-        doc_id: doc_id,
-        content: sequenced_content,
-        page_count: 10,
-        current_page: 1 
+    const filePath = await selectFilePath(doc_id)
+    const pageCount = await selectPageCount(doc_id)
+    const range = await selectRange(doc_id, 1, 10)
+    let pages = []
+    for(let i = 0; i < range.length; i++) {
+        const pageData = await extractPageContent(filePath, range[i].page_num)
+        pages.push(pageData);
     }
-    res.json(response)
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: null})
 })
 
-app.get('/api/random', authenticateToken, async (req,res)=> {
-    const data = await selectRandomRead()
-    res.json(data)
+app.get('/api/more_doc', authenticateToken, async (req,res)=> {
+    const doc_id = req.body.doc_id
+    const filePath = await selectFilePath(doc_id)
+    //take the difference of current_page in req.body and current_page in READERS
+    const range = await selectRange(doc_id, req.body.current_page, req.body.current_page + 10)
+
+     let pages = []
+    for(let i = 0; i < range.length; i++) {
+        const pageData = await extractPageContent(filePath, range[i].page_num)
+        pages.push(pageData);
+    }
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: null})
 })
 
+app.get('/api/random', async (req,res)=> {
+    const doc_id = await selectRandomDoc()
+    const filePath = await selectFilePath(doc_id)
+    const pageData = await extractPageContent(filePath, range[i].page_num)
+    return res.json(pageData)
+})
+
+//Use this method for production (OLD)
+// app.get('/api/random', authenticateToken, async (req,res)=> {
+//     const data = await selectRandomRead()
+//     res.json(data)
+// })
 //TODO(check for JSON web token and then query for )
