@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+//import { getUUIDFromToken } from './queries.js';
 dotenv.config();
 
 
@@ -17,7 +18,7 @@ export const authenticateToken = async (req, res, next) => {
             res.sendStatus(403)
             return;
         }
-        req.user = decoded.user_id
+        req.user_id = decoded.user_id
         next()
     })
 

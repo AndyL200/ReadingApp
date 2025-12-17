@@ -1,0 +1,1 @@
+INSERT INTO USER_LIKES (user_id, doc_id, liked_at) VALUES ($1, $2, $3) ON CONFLICT (user_id, doc_id) DO UPDATE SET liked_at = $3 RETURNING *;

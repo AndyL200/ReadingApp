@@ -17,7 +17,8 @@ async function uploadPDFStream(filePath) {
         const renderedPages = await storePages(docProxy, 1.0)
         const docId = await uploadDocument(title || "Untitled Document", pageCount, filePath, fileSize, 'pdf')
         for (const page of renderedPages) {
-            insertPageInfo(docId, page.pageNumber, page.width, page.height)
+            //page.width | 0 to strip decimal places
+            insertPageInfo(docId, page.pageNumber, page.width | 0, page.height | 0)
         }
     }
     catch (err) {

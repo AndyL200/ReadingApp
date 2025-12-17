@@ -1,1 +1,1 @@
-INSERT INTO READERS (doc_id, page_num, width, height) VALUES ($1, $2, $3, $4) ON CONFLICT (doc_id, page_num) DO UPDATE SET width = $3, height = $4 RETURNING page_num;
+INSERT INTO READERS (doc_id, page_num, width, height) VALUES ($1, $2, $3::INT, $4::INT) ON CONFLICT (doc_id, page_num) DO UPDATE SET width = $3::INT, height = $4::INT RETURNING page_num;

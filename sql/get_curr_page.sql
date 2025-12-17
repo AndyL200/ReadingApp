@@ -1,0 +1,1 @@
+SELECT * FROM USER_PAGES WHERE doc_id = $1 AND user_id = $2;

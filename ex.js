@@ -11,14 +11,17 @@ import {
     checkForToken,
     selectFilePath,
     hasEmail,
-    selectPageCount
+    selectPageCount,
+    getCurrPage
 } from "./queries.js";
-import { extractPageContent } from './pdfparse.js';
+import { extractPageContent, readPDF } from './pdfparse.js';
 import { authenticateToken, generateAccessToken } from './auth_helper.js';
 
 async function init() {
     try {
         await executeSQL("create_reader_table.sql")
+        await executeSQL("create_user_table.sql")
+        await executeSQL("create_user_attributes.sql")
         console.log("Database initialized")
     } catch (err) {
         console.error("Database init error", err)
@@ -76,8 +79,11 @@ app.post('/api/login', async (req, res) => {
     if (success) {
         //check for refresh token
         //if expired refresh
-        return res.json({user_id: success.user_id, accessToken: generateAccessToken({id: success.user_id}), LOGIN_SUCCESS: success.LOGIN_SUCCESS, ERROR: success.ERROR})
+        //TODO(Stop sending user_id)
+        return res.json({accessToken: generateAccessToken({id: success.user_id}), LOGIN_SUCCESS: success.LOGIN_SUCCESS, ERROR: success.ERROR})
     }
+
+    return res.json({accessToken: null, LOGIN_SUCCESS: false, ERROR: "Invalid credentials"})
 })
 
 
@@ -87,20 +93,34 @@ app.get('/api/me', async (req, res) => {
 })
 app.get('/api/refresh_token', authenticateToken, async (req, res) => {
     //issue new access token
-    const has_token = await checkForToken(req.body.user_id)
+    const user_id = req.user_id
+    if (!user_id) {
+        return res.status(400).json({ERROR: "User authentication failed"})
+    }
+    const has_token = await checkForToken(user_id)
 
     if(has_token) {
-        const access = generateAccessToken({id: req.body.user_id})
-        return res.json({user_id: req.body.user_id, accessToken: access})
+        const access = generateAccessToken({id: user_id})
+        return res.json({user_id: user_id, accessToken: access})
     }
 
 })
 app.post('/api/signup', async (req, res) => {
     //insert into users
     //only refresh token is stored
+    //check for valid password and email
+    
     if (await hasEmail(req.body.email)) {
-        console.log("REDIRECTING DUE TO EXISTING EMAIL")
-        return res.json({user_id: null, accessToken: null, SIGNUP_SUCCESS: false, ERROR: "Email already exists"})
+        const success = await loginUser(req.body.email, req.body.password, req.body.username)
+
+        if (success) {
+            //check for refresh token
+            //if expired refresh
+            //TODO(Stop sending user_id)
+            return res.json({accessToken: generateAccessToken({id: success.user_id}), LOGIN_SUCCESS: success.LOGIN_SUCCESS, ERROR: success.ERROR})
+        }
+
+        return res.json({user_id: null, accessToken: null, LOGIN_SUCCESS: false, ERROR: "Invalid credentials"})
     }
     const response = await registerUser(req.body.email, req.body.password, req.body.username)
     console.log("REGISTER RESPONSE: ", response)
@@ -114,38 +134,122 @@ app.post('/api/signup', async (req, res) => {
 //authentication middleware
 app.get('/', authenticateToken, async (req, res)=>{
     const doc_id = await selectRandomDoc()
+    const user_id = req.user_id
+    if (!user_id) {
+        return res.status(400).json({ERROR: "User authentication failed"})
+    }
     //getCurrPage
+    const current_page = await getCurrPage(doc_id, user_id)
     const filePath = await selectFilePath(doc_id)
     const pageCount = await selectPageCount(doc_id)
     const range = await selectRange(doc_id, 1, 10)
+    const docProxy = await readPDF(filePath)
     let pages = []
     for(let i = 0; i < range.length; i++) {
-        const pageData = await extractPageContent(filePath, range[i].page_num)
+        const pageData = await extractPageContent(docProxy, range[i].page_num)
         pages.push(pageData);
     }
-    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: null})
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: current_page})
 })
 
-app.get('/api/more_doc', authenticateToken, async (req,res)=> {
-    const doc_id = req.body.doc_id
+app.post('/api/user_like', authenticateToken, async (req, res) => {
+    let doc_id;
+    try {
+        doc_id = req.query.doc_id
+    }
+    catch (err) {
+        return res.status(400).json({ERROR: "doc_id is required in the request body"})
+    }
+    const user_id = req.user_id
+
+})
+
+app.get('/api/up_doc', authenticateToken, async (req,res)=> {
+    let doc_id;
+    try {
+        doc_id = req.query.doc_id
+        var temp = req.query.current_page
+    }
+    catch (err) {
+        return res.status(400).json({ERROR: "error grabbing doc_id and current_page"})
+    }
+    if(!doc_id || !req.query.current_page) {
+        return res.status(400).json({ERROR: "doc_id and current_page are required in the request body"})
+    }
+    //passed through authenticate token or by the user
+    const user_id = req.user_id
     const filePath = await selectFilePath(doc_id)
     //take the difference of current_page in req.body and current_page in READERS
-    const range = await selectRange(doc_id, req.body.current_page, req.body.current_page + 10)
-
-     let pages = []
+    const pageCount = await selectPageCount(doc_id)
+    const current_page = await getCurrPage(doc_id, user_id)
+    const diff = req.query.current_page - current_page
+    let range;
+    if(diff > 10) {
+        range = await selectRange(doc_id, req.query.current_page, req.query.current_page + 10)
+    }
+    else {
+        range = await selectRange(doc_id, req.query.current_page, req.query.current_page + 10)
+    }
+    const docProxy = await readPDF(filePath)
+    let pages = []
     for(let i = 0; i < range.length; i++) {
-        const pageData = await extractPageContent(filePath, range[i].page_num)
+        const pageData = await extractPageContent(docProxy, range[i].page_num)
         pages.push(pageData);
     }
-    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: null})
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: current_page})
+})
+
+app.get('/api/less_doc', authenticateToken, async (req,res)=> {
+    let doc_id;
+    try {
+        doc_id = req.query.doc_id
+        var temp = req.query.current_page
+    }
+    catch (err) {
+        return res.status(400).json({ERROR: "error grabbing doc_id and current_page"})
+    }
+    if(!doc_id || !req.query.current_page) {
+        return res.status(400).json({ERROR: "doc_id and current_page are required in the request body"})
+    }
+    //passed through authenticate token or by the user
+    //TODO(just rely on authenticateToken to set user_id and stop returning it to the client)
+    const user_id = req.user_id
+    const filePath = await selectFilePath(doc_id)
+    const pageCount = await selectPageCount(doc_id)
+    //take the difference of current_page in req.body and current_page in READERS
+    const current_page = await getCurrPage(doc_id, user_id)
+    //diff expected to be negative
+    const diff = req.query.current_page - current_page
+    let range;
+    if(diff < -10 && req.query.current_page + (diff-10) > 1) {
+        range = await selectRange(doc_id, req.query.current_page, req.query.current_page)
+    }
+    else if (diff < -10 && req.query.current_page + diff > 1) {
+        range = await selectRange(doc_id, req.query.current_page + diff, req.query.current_page)
+    }
+    else if (req.query.current_page - 10 > 1) {
+        range = await selectRange(doc_id, req.query.current_page - 10, req.query.current_page)
+    }
+    else {
+        range = await selectRange(doc_id, 1, req.query.current_page)
+    }
+    const docProxy = await readPDF(filePath)
+    let pages = []
+    for(let i = 0; i < range.length; i++) {
+        const pageData = await extractPageContent(docProxy, range[i].page_num)
+        pages.push(pageData);
+    }
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: current_page})
 })
 
 app.get('/api/random', async (req,res)=> {
     const doc_id = await selectRandomDoc()
     const filePath = await selectFilePath(doc_id)
-    const pageData = await extractPageContent(filePath, range[i].page_num)
+    const docProxy = await readPDF(filePath)
+    const pageData = await extractPageContent(docProxy, 1)
     return res.json(pageData)
 })
+
 
 //Use this method for production (OLD)
 // app.get('/api/random', authenticateToken, async (req,res)=> {

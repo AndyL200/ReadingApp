@@ -35,7 +35,7 @@ async function checkForToken(user_id) {
         return false;
     }
     //refresh if token is expired
-    if(token_data.expires_at < new Date().getTime()) {
+    if(token_data.expires_at < new Date()) {
         const update_query = loadSQL("refresh_token.sql")
         await pool.query(update_query, [user_id, generateRefreshToken({id: user_id}), new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)])
     }
@@ -47,13 +47,22 @@ async function hasEmail(email) {
     const result = await pool.query(query, [email])
     return result.rows.length > 0
 }
+
+async function getUUIDFromToken(token_hash) {
+    const query = loadSQL("get_user_id_from_token.sql")
+    const result = await pool.query(query, [token_hash])
+    return result.rows[0]?.user_id || null
+}
 async function loginUser(email, password, username = null) {
     if (username) {
         //Login with username
         try {
         const query = loadSQL("grab_user_by_uname.sql")
         const result = await pool.query(query, [username, password])
-        return {user_id: result.rows[0].user_id, LOGIN_SUCCESS: true, ERROR: null}
+        if (!result.rows[0]?.user_id) {
+            throw new Error("Can't obtian user_id")
+        }
+        return {user_id : result.rows[0]?.user_id, LOGIN_SUCCESS: true, ERROR: null}
         }
         catch (err) {
             return {user_id: null, LOGIN_SUCCESS: false, ERROR: err.message}
@@ -63,8 +72,13 @@ async function loginUser(email, password, username = null) {
         //Login with email
         try {
             const query = loadSQL("grab_user_by_email.sql")
+            console.log("email: ", email, " password: ", password)
             const result = await pool.query(query, [email, password])
-            return {user_id: result.rows[0].user_id, LOGIN_SUCCESS: true, ERROR: null}
+            console.log("Login result: ", result.rows)
+            if (!result.rows[0]?.user_id) {
+                throw new Error("Can't obtain user_id")
+            }
+            return {user_id: result.rows[0]?.user_id, LOGIN_SUCCESS: true, ERROR: null}
         }
         catch (err) {
             return {user_id: null, LOGIN_SUCCESS: false, ERROR: err.message}
@@ -72,7 +86,7 @@ async function loginUser(email, password, username = null) {
         
     }
 
-    return {user_id: null, LOGIN_SUCCESS: false, ERROR: null}
+    return {LOGIN_SUCCESS: false, ERROR: null}
 }
 async function getToken(token_hash) {
     const query = loadSQL("get_token.sql")
@@ -145,7 +159,7 @@ async function selectFilePath(docId) {
     return result.rows[0].file_path;
 }
 async function selectPageCount(docId) {
-    const query = loadSQL(`SELECT page_count FROM DOCUMENTS WHERE doc_id = $1`)
+    const query = `SELECT page_count FROM DOCUMENTS WHERE doc_id = $1`
 
     const result = await pool.query(query, [docId])
     return result.rows[0].page_count;
@@ -164,26 +178,7 @@ async function user_selectRange(docId, start, end, userId) {
 
 }
 
-async function getCurrPage(docId, userId) {
-    const query = loadSQL("get_curr_page.sql")
-    try {
-        const result = await pool.query(query, [docId, userId]);
-        if(!result.rows[0]) {
-            throw new Error("New user-document pair");
-        }
-        return result.rows[0].curr_page;
-    }
-    catch (err) {
-        if (err.message === "New user-document pair") {
-            let subquery = loadSQL("insert_user_doc_pair.sql");
-            await pool.query(subquery, [userId, docId, 1]); //default curr_page to 1
-            return null; // Indicate that this is a new pair
-        }
-        else {
-        console.error("Error getting current page: ", err);
-        }
-    }
-}
+
 
 async function selectRandomDoc() {
     const query = `SELECT doc_id FROM DOCUMENTS ORDER BY RANDOM() LIMIT 1`
@@ -207,7 +202,37 @@ async function selectRandomRead() {
     }
     
 }
+async function insertUserCurrentPage(doc_id, user_id, curr_page) {
+    const query = loadSQL("insert_user_pages.sql")
+    const date = new Date()
+    const result = await pool.query(query, [user_id, doc_id, curr_page, date])
 
+    return result.rows[0].current_page;
+}
+
+async function getCurrPage(docId, userId) {
+    console.log("Getting current page for docId:", docId, "userId:", userId);
+    const query = loadSQL("get_curr_page.sql")
+    try {
+        const result = await pool.query(query, [docId, userId]);
+        if(!result.rows[0]) {
+            throw new Error("New user-document pair");
+        }
+        return result.rows[0].current_page;
+    }
+    catch (err) {
+        return await insertUserCurrentPage(docId, userId, 1);
+    }
+}
+
+async function insertUserLikes(user_id, doc_id) {
+    const query = loadSQL("insert_user_likes.sql")
+    const date = new Date()
+    const result = await pool.query(query, [user_id, doc_id, date])
+
+    return result.rows[0];
+
+}
 async function insertPageInfo(docId, pageNum, width = null, height = null) {
     const query = loadSQL("insert_content.sql")
     if (!docId || !pageNum) {
@@ -248,6 +273,10 @@ export {
     insertPageInfo,
     selectFilePath,
     selectPageCount,
+    insertUserCurrentPage,
+    insertUserLikes,
+    getCurrPage,
+    getUUIDFromToken,
     hasEmail
 }
 

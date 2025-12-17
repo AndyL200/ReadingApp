@@ -1,0 +1,1 @@
+INSERT INTO USER_PAGES (user_id, doc_id, current_page, last_viewed_at) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id, doc_id) DO UPDATE SET current_page = $3, last_viewed_at = $4 RETURNING current_page;

@@ -1,0 +1,1 @@
+SELECT user_id FROM JWT_KEYS WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP;
