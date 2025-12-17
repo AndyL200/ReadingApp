@@ -1,3 +1,4 @@
+import React from "react"
 import { View, Text, TouchableOpacity, ScrollView } from "react-native"
 import { useAuth } from "../components/hooks/useAuth"
 

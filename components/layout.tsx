@@ -1,4 +1,4 @@
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {AuthProvider} from "../components/contexts/AuthContext"
@@ -9,7 +9,7 @@ import { PasswordScreen } from '../screens/password.tsx';
 import SignUpScreen from '../screens/sign_up.tsx';
 import LoginScreen from '../screens/login.tsx';
 import AppInit from '../screens/app_initialize.tsx';
-import PreScreen from '@/screens/pre_screen.tsx';
+import PreScreen from '../screens/pre_screen.tsx';
 
 
 const Tabs = createBottomTabNavigator()

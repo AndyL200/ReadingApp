@@ -1,5 +1,6 @@
+import React from "react"
 import { NavigationProp, useNavigation } from "@react-navigation/native"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Animated, View, Text, Easing } from "react-native"
 
 
@@ -45,7 +46,7 @@ export default function PreScreen() {
     return(
       <View className="flex-1 items-center justify-center bg-[#B1A7E7]">
         <Animated.View className="w-24 h-24 mb-4" style={{
-          transform: [{ scale }],
+          transform: [{ scale: scale }],
           borderRadius: borderRadius,
           backgroundColor: backgroundColor
         }}>

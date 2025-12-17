@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Text, View, Pressable, TextInput } from "react-native";
 import {Ionicons} from "@react-native-vector-icons/ionicons";
 import ModalDropdown from "./ModalDropdown";

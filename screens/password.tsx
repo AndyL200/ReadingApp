@@ -1,6 +1,7 @@
+import React from "react"
 import {View, Text, TextInput, TouchableOpacity} from "react-native";
 import {useAuth} from "../components/hooks/useAuth"
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 
 
@@ -16,40 +17,53 @@ export function PasswordScreen({route} : any) {
     console.log("PASSWORD SCREEN ENTERED: EMAIL ", email)
 
     //check for the existence of a token
-    const hasToken = !!token
-
-    useEffect(() => {
-        if(success_state) {
-            navigate.navigate("Home")
-        }
-    }, [success_state])
+   
+    const isLogin = route.params?.isLogin || false
 
 
-    async function HandleLogin() {
+
+    const HandleLogin = useCallback(async () =>{
+
         const val = validPass(password)
         if (val.valid) {
-            if(hasToken) {
+            if(isLogin) {
                 const success = await Login(password, username, email)
                 setSuccessState(success.LOGIN_SUCCESS)
                 setError(success.ERROR)
+                // if(success.SIGNUP_SUCCESS) {
+                //     console.log("Straight navigation to Home")
+                //     navigate.navigate("Home")
+                // }
             }
             else {
                 const success = await Register(email, password, username)
                 setSuccessState(success.SIGNUP_SUCCESS)
                 setError(success.ERROR)
+                // if(success.SIGNUP_SUCCESS) {
+                //     console.log("Straight navigation to Home")
+                //     navigate.navigate("Home")
+                // }
             }
         }
         else {
             setError(val.error)
         }
 
-    }
+    }, [password, username, email, isLogin])
+
+    useEffect(() => {
+        if (success_state) {
+            console.log("Indirect navigation to Home")
+            navigate.navigate("Home")
+        }
+    }, [success_state])
+
     return (
         <View className="flex-1 items-center justify-center bg-white px-4">
             <Text className="text-2xl font-bold mb-8">ReadingApp</Text>
             
             <View className="w-full max-w-md">
-                <Text className="text-lg mb-4 text-center">{isExisting ? 'Log In' : 'Create Account'}</Text>
+                <Text className="text-lg mb-4 text-center">{isLogin ? 'Log In' : 'Create Account'}</Text>
                 <Text className="text-sm mb-2 text-center">Enter your password</Text>
                 
                 {!email && (

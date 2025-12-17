@@ -1,4 +1,4 @@
-import {createContext, useState, useEffect, useLayoutEffect} from "react";
+import React, {createContext, useState, useEffect, useLayoutEffect} from "react";
 import {api} from "../../scripts/api.js";
 
 
@@ -84,6 +84,7 @@ export const AuthProvider = ({children}) => {
             if(response.data?.accessToken) {
                 setToken(response.data.accessToken)
             }
+            
 
             return {LOGIN_SUCCESS: response.data.LOGIN_SUCCESS, ERROR: response.data.ERROR};
             
@@ -136,6 +137,7 @@ export const AuthProvider = ({children}) => {
                 console.log("SETTING TOKEN", response.data.accessToken)
                 setToken(response.data.accessToken)
             }
+            
             else if (response.data?.ERROR == "Email already exists") {
                 return Login(password, username, email)
             }
@@ -157,6 +159,9 @@ export const AuthProvider = ({children}) => {
             config.headers.Authorization = !config._retry && token ? `Bearer ${token}` : config.headers.Authorization;
             return config;
         })
+        return () => {
+            api.interceptors.request.eject(authInterceptor);
+        }
     }, [token])  
 
 

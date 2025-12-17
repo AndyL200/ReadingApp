@@ -1,3 +1,4 @@
+import React from "react"
 import { NavigationProp, useNavigation } from "@react-navigation/native"
 import { useAuth } from "../components/hooks/useAuth";
 import { useState } from "react";
@@ -17,10 +18,10 @@ export default function SignUpScreen() {
     function passwordRedirect() {
         //pass email
         if(validEmail(email)) {
-                navigate.navigate("PasswordScreen", {email: email})
+                navigate.navigate("PasswordScreen", {email: email, isLogin: false})
             }
             else if (isExisting && validUsername(email).valid) {
-                navigate.navigate("PasswordScreen", {username: email})
+                navigate.navigate("PasswordScreen", {username: email, isLogin: false})
             }
             else {
             setError("Please enter a valid email or username")

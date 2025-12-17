@@ -1,4 +1,4 @@
-import { Button } from "@react-navigation/elements";
+import React from "react"
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
@@ -11,18 +11,18 @@ export default function LoginScreen() {
     const [error, setError] = useState<string | null>(null)
     const {token, validEmail, validUsername} = useAuth()
     function signUpRedirect() {
-        navigate.navigate("SignUp")
+        navigate.navigate("SignUp", {isLogin: false})
     }
     const isExisting = !!token
 
     function passwordRedirect() {
         //pass email
             if(validEmail(email)) {
-                navigate.navigate("PasswordScreen", {email: email})
+                navigate.navigate("PasswordScreen", {email: email, isLogin: true})
             }
             else if (isExisting && validUsername(email).valid) {
                 console.log("USERTOKEN", token)
-                navigate.navigate("PasswordScreen", {username: email})
+                navigate.navigate("PasswordScreen", {username: email, isLogin: true})
             }
             else {
             setError("Please enter a valid email or username")
