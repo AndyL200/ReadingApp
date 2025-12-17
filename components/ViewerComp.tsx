@@ -86,6 +86,7 @@ export default function ViewerComponent(props: ViewerComponentProps) {
             if(pageNum > 2) {
                 rangeStart = pageNum - 2
             }
+            try {
             const response = await api.get('/api/up_doc', {responseType: "json" , params: { doc_id: props.doc_id, current_page: rangeStart }});
             if (response && response.status === 200) {
                 const json = response.data
@@ -93,6 +94,10 @@ export default function ViewerComponent(props: ViewerComponentProps) {
                 //setCurrentPage(json.current_page || json.content[0].pageNumber || 1)
                 
             }
+        }
+        catch (err) {
+            console.error("Failed to fetch document:", err);
+        }
            //setTopSafety(true);
             setBottomSafety(true);
             isFetching.current = false;

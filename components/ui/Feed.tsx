@@ -60,38 +60,42 @@ export default function Feed() {
     }
 
     // Load more items to the right (pushBack)
-    async function loadMoreRight() {
+    async function loadMoreRight(batchSize: number = 3) {
         if (isFetchingMoreRef.current) return;
         isFetchingMoreRef.current = true;
         
-        const item = await fetchDocument();
-        if (item) {
-            deque.pushBack(item);
-            deque.popFront(); // Maintain size limit
-            forceUpdate(n => (n + 1) % 1000); // Force re-render
+        for (let i = 0; i < batchSize; i++) {
+            const item = await fetchDocument();
+            if (item) {
+                deque.pushBack(item);
+                deque.popFront(); // Maintain size limit
+            }
         }
-        
+        forceUpdate(n => (n + 1) % 1000); // Force re-render
         isFetchingMoreRef.current = false;
     }
 
     // Load more items to the left (pushFront)
-    async function loadMoreLeft() {
+    async function loadMoreLeft(batchSize: number = 3) {
         if (isFetchingMoreRef.current) return;
         isFetchingMoreRef.current = true;
         
-        const item = await fetchDocument();
-        if (item) {
-            deque.pushFront(item);
-            deque.popBack(); // Maintain size limit
-            forceUpdate(n => (n + 1) % 1000); // Force re-render
+        for(let i = 0; i < batchSize; i++) {
+            const item = await fetchDocument();
+            if (item) {
+                deque.pushFront(item);
+                deque.popBack(); // Maintain size limit
+            }
+        }
+           
             
             // Maintain scroll position after adding to front
             // flatListRef.current?.scrollToIndex({
             //     index: 1,
             //     animated: false,
             // });
-        }
         
+        forceUpdate(n => (n + 1) % 1000); // Force re-render
         isFetchingMoreRef.current = false;
     }
 
