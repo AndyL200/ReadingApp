@@ -166,9 +166,10 @@ app.post('/api/user_like', authenticateToken, async (req, res) => {
 
 app.get('/api/up_doc', authenticateToken, async (req,res)=> {
     let doc_id;
+    let current_page_num = 0
     try {
         doc_id = req.query.doc_id
-        var temp = req.query.current_page
+        current_page_num = parseInt(req.query.current_page)
     }
     catch (err) {
         return res.status(400).json({ERROR: "error grabbing doc_id and current_page"})
@@ -182,13 +183,14 @@ app.get('/api/up_doc', authenticateToken, async (req,res)=> {
     //take the difference of current_page in req.body and current_page in READERS
     const pageCount = await selectPageCount(doc_id)
     const current_page = await getCurrPage(doc_id, user_id)
-    const diff = req.query.current_page - current_page
+    //insert new page number
+    const diff = current_page_num - current_page
     let range;
     if(diff > 10) {
-        range = await selectRange(doc_id, req.query.current_page, req.query.current_page + 10)
+        range = await selectRange(doc_id, current_page_num, current_page_num + 10)
     }
     else {
-        range = await selectRange(doc_id, req.query.current_page, req.query.current_page + 10)
+        range = await selectRange(doc_id, current_page_num, current_page_num + 10)
     }
     const docProxy = await readPDF(filePath)
     let pages = []
@@ -196,14 +198,15 @@ app.get('/api/up_doc', authenticateToken, async (req,res)=> {
         const pageData = await extractPageContent(docProxy, range[i].page_num)
         pages.push(pageData);
     }
-    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: current_page})
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: req.query.current_page})
 })
 
 app.get('/api/less_doc', authenticateToken, async (req,res)=> {
     let doc_id;
+    let current_page_num = 0
     try {
         doc_id = req.query.doc_id
-        var temp = req.query.current_page
+        current_page_num = parseInt(req.query.current_page)
     }
     catch (err) {
         return res.status(400).json({ERROR: "error grabbing doc_id and current_page"})
@@ -221,17 +224,17 @@ app.get('/api/less_doc', authenticateToken, async (req,res)=> {
     //diff expected to be negative
     const diff = req.query.current_page - current_page
     let range;
-    if(diff < -10 && req.query.current_page + (diff-10) > 1) {
-        range = await selectRange(doc_id, req.query.current_page, req.query.current_page)
+    if(diff < -10 && current_page_num + (diff-10) > 1) {
+        range = await selectRange(doc_id, current_page_num - 10, current_page_num)
     }
-    else if (diff < -10 && req.query.current_page + diff > 1) {
-        range = await selectRange(doc_id, req.query.current_page + diff, req.query.current_page)
+    else if (diff < -10 && current_page_num + diff > 1) {
+        range = await selectRange(doc_id, current_page_num + diff, current_page_num)
     }
-    else if (req.query.current_page - 10 > 1) {
-        range = await selectRange(doc_id, req.query.current_page - 10, req.query.current_page)
+    else if (current_page_num - 10 > 1) {
+        range = await selectRange(doc_id, current_page_num - 10, current_page_num)
     }
     else {
-        range = await selectRange(doc_id, 1, req.query.current_page)
+        range = await selectRange(doc_id, 1, current_page_num)
     }
     const docProxy = await readPDF(filePath)
     let pages = []
@@ -239,7 +242,7 @@ app.get('/api/less_doc', authenticateToken, async (req,res)=> {
         const pageData = await extractPageContent(docProxy, range[i].page_num)
         pages.push(pageData);
     }
-    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: current_page})
+    return res.json({doc_id: doc_id, page_count: pageCount, content: pages, current_page: req.query.current_page})
 })
 
 app.get('/api/random', async (req,res)=> {
